@@ -9,12 +9,14 @@ body {
 /* Estilos para la barra de navegación */
 .navbar {
     background-color: #333;
-    overflow: hidden;
     padding: 10px;
+    /* Flexbox: alinea los enlaces en fila sin necesidad de floats ni clearfix */
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
 }
 
 .navbar a {
-    float: left;
     display: block;
     color: #f2f2f2;
     text-align: center;
@@ -134,8 +136,12 @@ footer {
 /* MEDIA QUERIES PARA DISEÑO RESPONSIVO */
 @media (max-width: 768px) {
     /* Ajuste para la barra de navegación en pantallas pequeñas */
+    .navbar {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
     .navbar a {
-        float: none;
         width: 100%;
         text-align: left;
     }

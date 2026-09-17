@@ -8,14 +8,16 @@ body {
 
 /* Estilos para la barra de navegación */
 .navbar {
-    overflow: hidden;
     background-color: #333;
     padding: 10px;
+    /* Flexbox: alinea los enlaces en fila sin necesidad de floats ni clearfix */
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
 }
 
 /* Estilos para los enlaces dentro de la barra de navegación */
 .navbar a {
-    float: left;
     display: block;
     color: #f2f2f2;
     text-align: center;
@@ -24,9 +26,12 @@ body {
     font-size: 17px;
 }
 
-/* Contenedor de enlaces alineados a la derecha */
+/* Contenedor de enlaces alineados a la derecha.
+   margin-left: auto empuja el bloque al extremo derecho dentro del contenedor flex */
 .navbar-right {
-    float: right;
+    display: flex;
+    align-items: center;
+    margin-left: auto;
 }
 
 /* Cambia el color del fondo y texto de los enlaces cuando se pasa el ratón por encima */
@@ -58,6 +63,28 @@ body {
 .navbar a.perfil:hover {
     background-color: #777;
     color: white;
+}
+
+/* Barra de navegación apilada en pantallas pequeñas */
+@media (max-width: 768px) {
+    .navbar {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .navbar-right {
+        flex-direction: column;
+        align-items: stretch;
+        margin-left: 0;
+    }
+
+    .navbar a.logout {
+        margin-left: 0;
+    }
+
+    .navbar a {
+        text-align: left;
+    }
 }
 
 /* Estilo para el contenedor principal de la página */

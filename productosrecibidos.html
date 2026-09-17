@@ -9,13 +9,15 @@
 <body>
 
     <!-- Barra de navegación -->
-    <div class="navbar">
+    <nav class="navbar">
         <a href="menuinicio.html">Inicio</a>
         <a href="stockproductos.html">Stock de Productos</a>
         <a href="productosrecibidos.html">Productos Recibidos</a>
         <a href="entregarproductos.html">Productos a Entregar</a>
-    </div>
+    </nav>
 
+    <!-- Contenido principal de la vista -->
+    <main class="main-content">
     <h2>Productos Recibidos</h2>
 
     <form onsubmit="return saveProduct()">
@@ -54,6 +56,7 @@
         </table>
         <p class="error" id="errorMessage" style="display:none;">Por favor, complete todos los campos antes de guardar.</p>
     </form>
+    </main>
 
     <script src="javascript/jsproductosrecibidos.js"></script>  <!-- Asegúrate de que esta ruta sea correcta -->
 </body>
