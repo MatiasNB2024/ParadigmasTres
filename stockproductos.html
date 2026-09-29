@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Stock de Productos</title>
-    <link rel="stylesheet" type="text/css" href="./css/cssproductosstock.css">
+    <link rel="stylesheet" type="text/css" href="./css/estilos.css">
 </head>
 <body>
 
@@ -17,42 +17,102 @@
     </nav>
 
     <!-- Contenido principal de la vista -->
-    <main class="main-content">
-    <h2>Stock de Productos</h2>
+    <main class="page">
+        <h2 class="page-title">Stock de Productos</h2>
 
-    <!-- Formulario para agregar un producto -->
-    <form method="POST" enctype="multipart/form-data">
-        <table id="productTable">
-            <thead>
-                <tr>
-                    <th>Imagen del Producto</th>
-                    <th>Descripción del Producto</th>
-                    <th>Cantidad</th>
-                    <th>Fecha de Recepción</th>
-                    <th>Proveedor</th>
-                    <th>Precio de Compra Por Unidad</th>
-                    <th>Acciones</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <td>
-                        <input type="file" name="image" accept="image/*" required>
-                    </td>
-                    <td><input type="text" name="productName" placeholder="Nombre del Producto" required></td>
-                    <td><input type="number" name="quantity" placeholder="Cantidad" min="0" required></td>
-                    <td><input type="date" name="receiptDate" required></td>
-                    <td><input type="text" name="supplier" placeholder="Proveedor" required></td>
-                    <td>
+        <!-- Monitor de inventario: alertas de estado crítico -->
+        <section class="monitor" aria-labelledby="titulo-monitor">
+            <h3 id="titulo-monitor">Monitor de Inventario</h3>
+
+            <div class="monitor-controles">
+                <div class="form-field">
+                    <label for="umbralCritico">Umbral crítico (unidades)</label>
+                    <input type="number" id="umbralCritico" min="0" step="1" value="10">
+                </div>
+                <button type="button" id="btnVerificar" class="btn">Verificar stock</button>
+                <span id="ultimaVerificacion" class="ultima-verificacion"></span>
+            </div>
+
+            <ul class="resumen">
+                <li>Productos: <strong id="resumenTotal">0</strong></li>
+                <li>En estado crítico: <strong id="resumenCriticos">0</strong></li>
+                <li>Stock normal: <strong id="resumenOk">0</strong></li>
+            </ul>
+
+            <div id="alertaStock" class="alerta-stock" role="alert" hidden></div>
+            <p id="estadoCarga" class="estado-carga" role="status" hidden></p>
+        </section>
+
+        <!-- Formulario para dar de alta un producto en stock.
+             Ya no se maqueta con <table>: los campos se organizan
+             con CSS Grid dentro de .form-grid. -->
+        <section class="form-section">
+            <form id="stockProductForm" class="product-form" novalidate>
+                <div class="form-grid">
+                    <div class="form-field">
+                        <label for="productName">Descripción del Producto</label>
+                        <input type="text" id="productName" placeholder="Nombre del Producto" required>
+                    </div>
+                    <div class="form-field">
+                        <label for="quantity">Cantidad</label>
+                        <input type="number" id="quantity" placeholder="Cantidad" min="0" required>
+                    </div>
+                    <div class="form-field">
+                        <label for="receiptDate">Fecha de Recepción</label>
+                        <input type="date" id="receiptDate" required>
+                    </div>
+                    <div class="form-field">
+                        <label for="supplier">Proveedor</label>
+                        <input type="text" id="supplier" placeholder="Proveedor" required>
+                    </div>
+                    <div class="form-field">
+                        <label for="purchasePrice">Precio de Compra Por Unidad</label>
                         <div class="price-container">
-                            <span>$</span><input type="number" name="purchasePrice" placeholder="0.00" min="0" step="0.01" required>
+                            <span>$</span>
+                            <input type="number" id="purchasePrice" placeholder="0.00" min="0" step="0.01" required>
                         </div>
-                    </td>
-                    <td><button type="submit" name="save">Guardar</button></td>
-                </tr>
-            </tbody>
-        </table>
-    </form>
+                    </div>
+                    <div class="form-field">
+                        <label for="fileInput">Imagen del Producto</label>
+                        <div class="image-upload">
+                            <input type="file" accept="image/*" id="fileInput">
+                            <img id="preview" class="preview" alt="Vista previa del producto" style="display:none;">
+                        </div>
+                    </div>
+                </div>
+                <p class="error" id="errorMessage" style="display:none;">Por favor, complete todos los campos antes de guardar.</p>
+                <button type="submit" class="btn">Guardar</button>
+            </form>
+        </section>
+
+        <!-- Tabla: se reserva exclusivamente para representar datos
+             tabulares consolidados (el stock ya guardado).
+             Las filas se generan dinámicamente por JavaScript. -->
+        <section class="table-section" id="productTableContainer" style="display:none;">
+            <table id="productTable">
+                <caption class="visually-hidden">Listado del stock de productos</caption>
+                <thead>
+                    <tr>
+                        <th scope="col">Imagen del Producto</th>
+                        <th scope="col">Descripción del Producto</th>
+                        <th scope="col">Cantidad</th>
+                        <th scope="col">Fecha de Recepción</th>
+                        <th scope="col">Proveedor</th>
+                        <th scope="col">Precio de Compra Por Unidad</th>
+                        <th scope="col">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Filas generadas dinámicamente por app.js -->
+                </tbody>
+            </table>
+        </section>
     </main>
+
+    <footer class="footer">
+        <p>&copy; 2024 Benitez Despensas. Todos los derechos reservados.</p>
+    </footer>
+
+    <script src="javascript/app.js" defer></script>
 </body>
 </html>

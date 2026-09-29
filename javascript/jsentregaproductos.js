@@ -206,4 +206,33 @@ function resetDeliveredForm() {
     document.getElementById('receiver').value = '';
     document.getElementById('deliveryPrice').value = '';
     document.getElementById('deliveredPreview').style.display = 'none';
+    document.getElementById('subtotal').textContent = '0.00';
 }
+
+/* ================================================================
+   Actividad complementaria - Parte B
+   Calcula el subtotal a cobrar (cantidad x precio de venta) y lo
+   inyecta en el <span id="subtotal"> en tiempo real, sin recargar
+   la página.
+   ================================================================ */
+function calcularSubtotal() {
+    // Lee los datos de entrada y los convierte a número
+    const cantidad = Number(document.getElementById('deliveredQuantity').value) || 0;
+    const precioUnitario = Number(document.getElementById('deliveryPrice').value) || 0;
+
+    // Sumatoria/producto acumulado en memoria (no se guarda en localStorage)
+    const subtotal = cantidad * precioUnitario;
+
+    // Inyecta el resultado en el nodo del DOM
+    document.getElementById('subtotal').textContent = subtotal.toFixed(2);
+}
+
+/* Se ejecuta al cargar la página */
+document.addEventListener('DOMContentLoaded', function () {
+    loadDeliveredProducts();
+
+    /* Captura el evento "input": se dispara en cada tecla o cambio
+       de valor, permitiendo mostrar el subtotal en tiempo real. */
+    document.getElementById('deliveredQuantity').addEventListener('input', calcularSubtotal);
+    document.getElementById('deliveryPrice').addEventListener('input', calcularSubtotal);
+});

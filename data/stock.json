@@ -1,0 +1,33 @@
+{
+  "umbralCritico": 10,
+  "actualizado": "2026-09-28",
+  "productos": [
+    {
+      "id": 1,
+      "productName": "Harina Morixe 000 - 1 kg",
+      "quantity": 45,
+      "receiptDate": "2026-09-15",
+      "supplier": "Distribuidora Molinos SA",
+      "purchasePrice": 1250.5,
+      "image": "imgstock/harinamorixe.png"
+    },
+    {
+      "id": 2,
+      "productName": "Harina Morixe 0000 - 1 kg",
+      "quantity": 6,
+      "receiptDate": "2026-09-10",
+      "supplier": "Distribuidora Molinos SA",
+      "purchasePrice": 1380,
+      "image": "imgstock/harinamorixecuatroceros.png"
+    },
+    {
+      "id": 3,
+      "productName": "Harina Morixe 000 - 1 kg (lote 2)",
+      "quantity": 0,
+      "receiptDate": "2026-08-30",
+      "supplier": "Mayorista Del Norte",
+      "purchasePrice": 1240,
+      "image": "imgstock/harinamorixetresceros.png"
+    }
+  ]
+}

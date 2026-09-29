@@ -4,53 +4,73 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Perfil del Usuario</title>
-    <link rel="stylesheet" type="text/css" href="./css/cssusuario.css">
+    <link rel="stylesheet" type="text/css" href="./css/estilos.css">
 </head>
 <body>
 
+    <!-- Barra de navegación (misma estructura que el resto de las secciones internas) -->
+    <nav class="navbar">
+        <a href="menuinicio.html">Inicio</a>
+        <a href="stockproductos.html">Stock de Productos</a>
+        <a href="productosrecibidos.html">Productos Recibidos</a>
+        <a href="entregarproductos.html">Productos a Entregar</a>
+        <div class="navbar-right">
+            <a href="perfilusuario.html" class="perfil">Ver Perfil</a>
+            <a href="iniciosesion.html" class="logout">Cerrar Sesión</a>
+        </div>
+    </nav>
+
     <!-- Contenido principal de la vista -->
-    <main class="container">
-        <h2>Perfil del Usuario</h2>
+    <main class="page">
+        <h2 class="page-title">Perfil del Usuario</h2>
+
         <!-- Formulario para guardar los datos del perfil -->
-        <form id="profileForm" action="conexionperfil.php" method="POST">
-            <!-- Campo para el nombre del usuario -->
-            <label for="name">Nombre del Usuario:</label>
-            <input type="text" id="name" name="name" required>
+        <form id="profileForm" class="profile-form" action="conexionperfil.php" method="POST">
+            <div class="form-field">
+                <label for="name">Nombre del Usuario:</label>
+                <input type="text" id="name" name="name" required>
+            </div>
 
-            <!-- Campo para la dirección -->
-            <label for="address">Dirección:</label>
-            <input type="text" id="address" name="address" required>
+            <div class="form-field">
+                <label for="address">Dirección:</label>
+                <input type="text" id="address" name="address" required>
+            </div>
 
-            <!-- Campo para el teléfono -->
-            <label for="phone">Teléfono:</label>
-            <input type="tel" id="phone" name="phone" required>
+            <div class="form-field">
+                <label for="phone">Teléfono:</label>
+                <input type="tel" id="phone" name="phone" required>
+            </div>
 
-            <!-- Campo para el correo electrónico -->
-            <label for="email">E-mail:</label>
-            <input type="email" id="email" name="email" required>
+            <div class="form-field">
+                <label for="email">E-mail:</label>
+                <input type="email" id="email" name="email" required>
+            </div>
 
-            <!-- Menú desplegable para seleccionar método de pago -->
-            <label for="payment">Medio de Pago:</label>
-            <select id="payment" name="payment">
-                <option value="tarjeta">Tarjeta de Crédito/Débito</option>
-                <option value="paypal">PayPal</option>
-                <option value="efectivo">Efectivo</option>
-                <option value="online">Mercado Pago</option>
-            </select>
+            <div class="form-field">
+                <label for="payment">Medio de Pago:</label>
+                <select id="payment" name="payment">
+                    <option value="tarjeta">Tarjeta de Crédito/Débito</option>
+                    <option value="paypal">PayPal</option>
+                    <option value="efectivo">Efectivo</option>
+                    <option value="online">Mercado Pago</option>
+                </select>
+            </div>
 
-            <!-- Campo de texto para información adicional -->
-            <label for="additionalInfo">Información Adicional:</label>
-            <textarea id="additionalInfo" name="additionalInfo" rows="4" placeholder="Ingrese cualquier información adicional aquí..."></textarea>
+            <div class="form-field">
+                <label for="additionalInfo">Información Adicional:</label>
+                <textarea id="additionalInfo" name="additionalInfo" rows="4" placeholder="Ingrese cualquier información adicional aquí..."></textarea>
+            </div>
 
-            <!-- Botón para guardar cambios -->
-            <button type="submit">Guardar Cambios</button>
+            <button type="submit" class="btn">Guardar Cambios</button>
         </form>
 
         <!-- Botón para volver al inicio -->
-        <a href="menuinicio.html">
-            <button type="button">Volver al Menú de Inicio</button>
-        </a>
+        <a href="menuinicio.html" class="btn btn-secondary">Volver al Menú de Inicio</a>
     </main>
+
+    <footer class="footer">
+        <p>&copy; 2024 Benitez Despensas. Todos los derechos reservados.</p>
+    </footer>
 
     <script>
         // Cargar datos del perfil desde localStorage
@@ -69,7 +89,7 @@
         // Guardar los datos del perfil en localStorage
         document.getElementById('profileForm').addEventListener('submit', function(e) {
             e.preventDefault();
-            
+
             const userProfile = {
                 name: document.getElementById('name').value,
                 address: document.getElementById('address').value,
