@@ -1,0 +1,32 @@
+{
+    "1": {
+        "sku": "HAR-000-001",
+        "ubicacion": "Depósito A - Estante 1",
+        "lote": "L2609-A",
+        "vencimiento": "2027-03-15",
+        "peso": "1 kg",
+        "medidas": "10 x 6 x 19 cm",
+        "almacenamiento": "Lugar seco y fresco",
+        "contacto": "Distribuidora Molinos SA"
+    },
+    "2": {
+        "sku": "HAR-0000-002",
+        "ubicacion": "Depósito A - Estante 1",
+        "lote": "L2609-B",
+        "vencimiento": "2027-03-20",
+        "peso": "1 kg",
+        "medidas": "10 x 6 x 19 cm",
+        "almacenamiento": "Lugar seco y fresco",
+        "contacto": "Distribuidora Molinos SA"
+    },
+    "3": {
+        "sku": "HAR-000-003",
+        "ubicacion": "Depósito B - Estante 2",
+        "lote": "L2608-C",
+        "vencimiento": "2027-01-10",
+        "peso": "1 kg",
+        "medidas": "10 x 6 x 19 cm",
+        "almacenamiento": "Lugar seco, lejos de la humedad",
+        "contacto": "Mayorista Del Norte"
+    }
+}

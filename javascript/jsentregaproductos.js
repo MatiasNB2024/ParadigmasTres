@@ -1,209 +1,272 @@
-/* Carga los productos entregados en localStorage cuando se carga la página */
-function loadDeliveredProducts() {
-    const storedProducts = JSON.parse(localStorage.getItem('deliveredProducts')) || [];
-    const table = document.getElementById('deliveredProductTable').getElementsByTagName('tbody')[0];
+/* ==========================================================================
+   jsentregaproductos.js - Productos a Entregar (entregarproductos.html)
 
-    /* Añade cada producto entregado en una nueva fila en la tabla */
-    storedProducts.forEach((product, index) => {
-        const newRow = table.insertRow();
-        newRow.innerHTML = `
-            <td>
-                <div class="image-upload">
-                    <img src="${product.image}" class="preview">
-                </div>
-            </td>
-            <td contenteditable="true">${product.productName}</td>
-            <td contenteditable="true">${product.quantity}</td>
-            <td contenteditable="true">${product.deliveryDate}</td>
-            <td contenteditable="true">${product.receiver}</td>
-            <td contenteditable="true">$${parseFloat(product.deliveryPrice).toFixed(2)}</td>
-            <td>
-                <button class="edit-button" onclick="editDeliveredProduct(this, ${index})">Editar</button>
-                <button class="delete-button" onclick="deleteDeliveredProduct(${index})">Eliminar</button>
-            </td>
-        `;
-    });
+   - Desacoplamiento: no hay onclick / onsubmit / onchange en el HTML ni en el
+     HTML generado por este archivo; todo se registra con addEventListener().
+   - Los botones de la tabla se atienden con delegación de eventos: un único
+     listener sobre el <tbody> sirve para todas las filas (presentes y futuras).
+   - Las filas se construyen con la API del DOM (textContent), sin innerHTML.
+   - Nodos: se seleccionan con querySelector().
+   ========================================================================== */
+'use strict';
 
-    // Muestra la tabla solo si hay productos entregados
-    const tableContainer = document.getElementById('deliveredProductTableContainer');
-    tableContainer.style.display = storedProducts.length > 0 ? 'block' : 'none';
+const CLAVE_STORAGE = 'deliveredProducts';
+
+const $ = (selector, raiz = document) => raiz.querySelector(selector);
+
+/* ------------------------------------------------------------------ */
+/* Persistencia                                                       */
+/* ------------------------------------------------------------------ */
+function leerProductos() {
+    return JSON.parse(localStorage.getItem(CLAVE_STORAGE)) || [];
 }
 
-/* Muestra la vista previa de la imagen seleccionada para un producto entregado */
-function previewDeliveredImage(event, previewId) {
-    const input = event.target;
-    const reader = new FileReader();
-
-    reader.onload = function() {
-        const output = document.getElementById(previewId);
-        output.src = reader.result;
-        output.style.display = 'block';
-    };
-
-    if (input.files && input.files[0]) {
-        reader.readAsDataURL(input.files[0]);
-    } else {
-        const output = document.getElementById(previewId);
-        output.src = "";
-        output.style.display = 'none';
-    }
-}
-
-/* Guarda un nuevo producto entregado en localStorage y lo añade a la tabla */
-function saveDeliveredProduct() {
-    const productName = document.getElementById('deliveredProductName').value;
-    const quantity = document.getElementById('deliveredQuantity').value;
-    const deliveryDate = document.getElementById('deliveredDate').value;
-    const receiver = document.getElementById('receiver').value;
-    const deliveryPrice = document.getElementById('deliveryPrice').value;
-    const image = document.getElementById('deliveredPreview').src;
-
-    /* Valida que todos los campos estén completos antes de guardar */
-    if (!productName || !quantity || !deliveryDate || !receiver || !deliveryPrice || image === "") {
-        document.getElementById('errorMessage').style.display = 'block';
+function guardarProductos(lista) {
+    try {
+        localStorage.setItem(CLAVE_STORAGE, JSON.stringify(lista));
+        return true;
+    } catch (error) {
+        mostrarError('No hay espacio para guardar los datos. Probá con una imagen más liviana.');
         return false;
     }
-
-    const storedProducts = JSON.parse(localStorage.getItem('deliveredProducts')) || [];
-    storedProducts.push({
-        productName,
-        quantity,
-        deliveryDate,
-        receiver,
-        deliveryPrice,
-        image
-    });
-
-    localStorage.setItem('deliveredProducts', JSON.stringify(storedProducts));
-
-    /* Añade el nuevo producto entregado como una fila en la tabla */
-    const table = document.getElementById('deliveredProductTable').getElementsByTagName('tbody')[0];
-    const newRow = table.insertRow();
-
-    newRow.innerHTML = `
-        <td>
-            <div class="image-upload">
-                <img src="${image}" class="preview">
-            </div>
-        </td>
-        <td contenteditable="true">${productName}</td>
-        <td contenteditable="true">${quantity}</td>
-        <td contenteditable="true">${deliveryDate}</td>
-        <td contenteditable="true">${receiver}</td>
-        <td contenteditable="true">$${parseFloat(deliveryPrice).toFixed(2)}</td>
-        <td>
-            <button class="edit-button" onclick="editDeliveredProduct(this)">Editar</button>
-            <button class="delete-button" onclick="deleteDeliveredProduct(${storedProducts.length - 1})">Eliminar</button>
-        </td>
-    `;
-
-    /* Limpia los campos del formulario después de guardar */
-    resetDeliveredForm();
-
-    document.getElementById('errorMessage').style.display = 'none';
-
-    return false;
 }
 
-/* Permite editar un producto entregado existente */
-function editDeliveredProduct(button, index) {
-    const row = button.parentElement.parentElement;
-    const cells = row.getElementsByTagName('td');
+/* ------------------------------------------------------------------ */
+/* Mensajes                                                           */
+/* ------------------------------------------------------------------ */
+const MENSAJE_CAMPOS = 'Por favor, complete todos los campos antes de guardar.';
 
-    /* Habilita la edición de la imagen del producto entregado */
-    const imageUploadDiv = cells[0].querySelector('.image-upload');
-    const currentImage = imageUploadDiv.querySelector('img').src;
-    imageUploadDiv.innerHTML = `
-        <input type="file" accept="image/*" onchange="previewDeliveredImage(event, 'deliveredPreview_${index}')">
-        <img id="deliveredPreview_${index}" class="preview" src="${currentImage}" style="display: block;">
-    `;
+function mostrarError(texto) {
+    const mensaje = $('#errorMessage');
+    mensaje.textContent = texto;
+    mensaje.style.display = 'block';
+}
 
-    /* Habilita la edición de los demás campos */
-    for (let i = 1; i < cells.length - 1; i++) {
-        cells[i].setAttribute('contenteditable', 'true');
+function ocultarError() {
+    $('#errorMessage').style.display = 'none';
+}
+
+/* ------------------------------------------------------------------ */
+/* Imagen: vista previa                                               */
+/* ------------------------------------------------------------------ */
+function mostrarVistaPrevia(input, salida) {
+    const archivo = input.files && input.files[0];
+
+    if (!archivo) {
+        salida.removeAttribute('src');
+        salida.style.display = 'none';
+        return;
     }
 
-    button.textContent = "Guardar";
-    button.onclick = function() {
-        saveDeliveredEdits(index);
+    const lector = new FileReader();
+    lector.addEventListener('load', () => {
+        salida.src = lector.result;
+        salida.style.display = 'block';
+    });
+    lector.readAsDataURL(archivo);
+}
+
+/* ------------------------------------------------------------------ */
+/* Render de la tabla                                                 */
+/* ------------------------------------------------------------------ */
+function crearCelda(texto) {
+    const td = document.createElement('td');
+    td.textContent = texto;
+    td.contentEditable = 'true';
+    return td;
+}
+
+function crearBoton(texto, accion, clase) {
+    const boton = document.createElement('button');
+    boton.type = 'button';
+    boton.textContent = texto;
+    boton.dataset.accion = accion;
+    boton.className = clase;
+    return boton;
+}
+
+function crearFila(producto, indice) {
+    const tr = document.createElement('tr');
+    tr.dataset.indice = indice;
+
+    const tdImagen = document.createElement('td');
+    const contenedor = document.createElement('div');
+    contenedor.className = 'image-upload';
+    const img = document.createElement('img');
+    img.className = 'preview';
+    img.alt = producto.productName;
+    img.src = producto.image;
+    contenedor.appendChild(img);
+    tdImagen.appendChild(contenedor);
+
+    const tdAcciones = document.createElement('td');
+    tdAcciones.append(
+        crearBoton('Editar', 'editar', 'edit-button'),
+        crearBoton('Eliminar', 'eliminar', 'delete-button')
+    );
+
+    tr.append(
+        tdImagen,
+        crearCelda(producto.productName),
+        crearCelda(producto.quantity),
+        crearCelda(producto.deliveryDate),
+        crearCelda(producto.receiver),
+        crearCelda(`$${Number.parseFloat(producto.deliveryPrice).toFixed(2)}`),
+        tdAcciones
+    );
+    return tr;
+}
+
+function renderTabla() {
+    const productos = leerProductos();
+    $('#deliveredProductTable tbody').replaceChildren(...productos.map(crearFila));
+    $('#deliveredProductTableContainer').style.display = productos.length > 0 ? 'block' : 'none';
+}
+
+/* ------------------------------------------------------------------ */
+/* Alta de un producto                                                */
+/* ------------------------------------------------------------------ */
+function reiniciarFormulario() {
+    $('#deliveredProductForm').reset();
+    $('#subtotal').textContent = '0.00';
+    const vista = $('#deliveredPreview');
+    vista.removeAttribute('src');
+    vista.style.display = 'none';
+}
+
+function alEnviarFormulario(evento) {
+    evento.preventDefault();
+
+    const productName = $('#deliveredProductName').value.trim();
+    const quantity = $('#deliveredQuantity').value;
+    const deliveryDate = $('#deliveredDate').value;
+    const receiver = $('#receiver').value.trim();
+    const deliveryPrice = $('#deliveryPrice').value;
+    const image = $('#deliveredPreview').getAttribute('src');
+
+    /* Valida que todos los campos estén completos antes de guardar */
+    if (!productName || !quantity || !deliveryDate || !receiver || !deliveryPrice || !image) {
+        mostrarError(MENSAJE_CAMPOS);
+        return;
+    }
+
+    const productos = leerProductos();
+    productos.push({ productName, quantity, deliveryDate, receiver, deliveryPrice, image });
+    if (!guardarProductos(productos)) return;
+
+    renderTabla();
+    reiniciarFormulario();
+    ocultarError();
+}
+
+/* ------------------------------------------------------------------ */
+/* Edición / eliminación (delegación de eventos sobre el <tbody>)     */
+/* ------------------------------------------------------------------ */
+function activarEdicion(fila, boton) {
+    /* Se agrega un selector de archivo para poder cambiar la imagen */
+    const contenedor = $('.image-upload', fila);
+    const selector = document.createElement('input');
+    selector.type = 'file';
+    selector.accept = 'image/*';
+    contenedor.prepend(selector);
+
+    boton.textContent = 'Guardar';
+    boton.dataset.accion = 'guardar';
+}
+
+function guardarEdicion(fila) {
+    const indice = Number(fila.dataset.indice);
+    const productos = leerProductos();
+    const producto = productos[indice];
+    if (!producto) return;
+
+    const celdas = fila.cells;
+    producto.productName = celdas[1].textContent.trim();
+    producto.quantity = celdas[2].textContent.trim();
+    producto.deliveryDate = celdas[3].textContent.trim();
+    producto.receiver = celdas[4].textContent.trim();
+    producto.deliveryPrice = celdas[5].textContent.replace('$', '').trim();
+
+    const finalizar = () => {
+        if (guardarProductos(productos)) renderTabla();
     };
-}
 
-/* Guarda los cambios realizados en un producto entregado existente */
-function saveDeliveredEdits(index) {
-    const storedProducts = JSON.parse(localStorage.getItem('deliveredProducts')) || [];
-    const product = storedProducts[index];
-
-    product.productName = document.querySelector(`#deliveredProductTable tbody tr:nth-child(${index + 1}) td:nth-child(2)`).innerText;
-    product.quantity = document.querySelector(`#deliveredProductTable tbody tr:nth-child(${index + 1}) td:nth-child(3)`).innerText;
-    product.deliveryDate = document.querySelector(`#deliveredProductTable tbody tr:nth-child(${index + 1}) td:nth-child(4)`).innerText;
-    product.receiver = document.querySelector(`#deliveredProductTable tbody tr:nth-child(${index + 1}) td:nth-child(5)`).innerText;
-    product.deliveryPrice = document.querySelector(`#deliveredProductTable tbody tr:nth-child(${index + 1}) td:nth-child(6)`).innerText.replace('$', '');
-
-    /* Actualiza la imagen si hay una nueva */
-    const imageUploadDiv = document.querySelector(`#deliveredProductTable tbody tr:nth-child(${index + 1}) .image-upload`);
-    const inputFile = imageUploadDiv.querySelector('input[type="file"]');
-    if (inputFile.files.length > 0) {
-        const reader = new FileReader();
-        reader.onload = function() {
-            product.image = reader.result;
-            updateDeliveredProductTable();
-        };
-        reader.readAsDataURL(inputFile.files[0]);
-    } else {
-        updateDeliveredProductTable();
+    /* Actualiza la imagen solo si se eligió un archivo nuevo */
+    const archivo = $('input[type="file"]', fila).files[0];
+    if (!archivo) {
+        finalizar();
+        return;
     }
 
-    /* Actualiza el localStorage */
-    localStorage.setItem('deliveredProducts', JSON.stringify(storedProducts));
-}
-
-/* Actualiza la tabla con los productos entregados editados */
-function updateDeliveredProductTable() {
-    const storedProducts = JSON.parse(localStorage.getItem('deliveredProducts')) || [];
-    const table = document.getElementById('deliveredProductTable').getElementsByTagName('tbody')[0];
-    table.innerHTML = '';
-
-    /* Vuelve a añadir todos los productos entregados en la tabla */
-    storedProducts.forEach((product, index) => {
-        const newRow = table.insertRow();
-        newRow.innerHTML = `
-            <td>
-                <div class="image-upload">
-                    <img src="${product.image}" class="preview">
-                </div>
-            </td>
-            <td contenteditable="true">${product.productName}</td>
-            <td contenteditable="true">${product.quantity}</td>
-            <td contenteditable="true">${product.deliveryDate}</td>
-            <td contenteditable="true">${product.receiver}</td>
-            <td contenteditable="true">$${parseFloat(product.deliveryPrice).toFixed(2)}</td>
-            <td>
-                <button class="edit-button" onclick="editDeliveredProduct(this, ${index})">Editar</button>
-                <button class="delete-button" onclick="deleteDeliveredProduct(${index})">Eliminar</button>
-            </td>
-        `;
+    const lector = new FileReader();
+    lector.addEventListener('load', () => {
+        producto.image = lector.result;
+        finalizar();
     });
-
-    // Muestra la tabla solo si hay productos entregados
-    const tableContainer = document.getElementById('deliveredProductTableContainer');
-    tableContainer.style.display = storedProducts.length > 0 ? 'block' : 'none';
+    lector.readAsDataURL(archivo);
 }
 
-/* Elimina un producto entregado */
-function deleteDeliveredProduct(index) {
-    const storedProducts = JSON.parse(localStorage.getItem('deliveredProducts')) || [];
-    storedProducts.splice(index, 1);
-    localStorage.setItem('deliveredProducts', JSON.stringify(storedProducts));
-    updateDeliveredProductTable();
+function eliminarProducto(fila) {
+    const productos = leerProductos();
+    productos.splice(Number(fila.dataset.indice), 1);
+    if (!guardarProductos(productos)) return;
+
+    renderTabla();
+    if (productos.length === 0) reiniciarFormulario();
 }
 
-/* Reinicia el formulario de productos entregados */
-function resetDeliveredForm() {
-    document.getElementById('deliveredProductName').value = '';
-    document.getElementById('deliveredQuantity').value = '';
-    document.getElementById('deliveredDate').value = '';
-    document.getElementById('receiver').value = '';
-    document.getElementById('deliveryPrice').value = '';
-    document.getElementById('deliveredPreview').style.display = 'none';
+function alClickEnTabla(evento) {
+    const boton = evento.target.closest('button[data-accion]');
+    if (!boton) return;
+
+    const fila = boton.closest('tr');
+
+    switch (boton.dataset.accion) {
+        case 'editar':
+            activarEdicion(fila, boton);
+            break;
+        case 'guardar':
+            guardarEdicion(fila);
+            break;
+        case 'eliminar':
+            eliminarProducto(fila);
+            break;
+    }
 }
+
+/* Vista previa de la imagen elegida mientras se edita una fila */
+function alCambiarArchivoEnFila(evento) {
+    if (!evento.target.matches('input[type="file"]')) return;
+    const imagenFila = $('img.preview', evento.target.closest('.image-upload'));
+    if (evento.target.files[0]) mostrarVistaPrevia(evento.target, imagenFila);
+}
+
+/* ------------------------------------------------------------------ */
+/* Actividad complementaria - Parte B: subtotal en tiempo real        */
+/* ------------------------------------------------------------------ */
+function calcularSubtotal() {
+    /* .value es texto: se convierte a número antes de operar */
+    const cantidad = Number($('#deliveredQuantity').value) || 0;
+    const precioUnitario = Number($('#deliveryPrice').value) || 0;
+
+    /* El resultado se inyecta en el nodo del DOM, sin recargar la página */
+    $('#subtotal').textContent = (cantidad * precioUnitario).toFixed(2);
+}
+
+/* ------------------------------------------------------------------ */
+/* Registro de eventos                                                */
+/* ------------------------------------------------------------------ */
+document.addEventListener('DOMContentLoaded', () => {
+    $('#deliveredProductForm').addEventListener('submit', alEnviarFormulario);
+    $('#deliveredFileInput').addEventListener('change', (evento) => mostrarVistaPrevia(evento.target, $('#deliveredPreview')));
+
+    /* El evento "input" se dispara en cada tecla: da la sensación de tiempo real */
+    $('#deliveredQuantity').addEventListener('input', calcularSubtotal);
+    $('#deliveryPrice').addEventListener('input', calcularSubtotal);
+
+    const cuerpo = $('#deliveredProductTable tbody');
+    cuerpo.addEventListener('click', alClickEnTabla);
+    cuerpo.addEventListener('change', alCambiarArchivoEnFila);
+
+    renderTabla();
+});

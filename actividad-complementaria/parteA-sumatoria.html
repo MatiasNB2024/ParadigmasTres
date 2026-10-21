@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Actividad Complementaria - Parte A</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 480px;
+            margin: 40px auto;
+            padding: 0 20px;
+            color: #222;
+        }
+        h1 { font-size: 22px; }
+        .campo {
+            display: flex;
+            flex-direction: column;
+            margin-bottom: 16px;
+        }
+        label { font-weight: bold; margin-bottom: 4px; }
+        input[type="number"] {
+            padding: 8px;
+            font-size: 16px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        button {
+            padding: 10px 18px;
+            font-size: 16px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover { background-color: #45a049; }
+        .caja-resultado {
+            margin-top: 20px;
+            padding: 16px;
+            border-radius: 4px;
+            background-color: #f2f2f2;
+            font-size: 18px;
+        }
+        #resultado.positivo { color: #2e7d32; font-weight: bold; }
+        #resultado.negativo { color: #c62828; font-weight: bold; }
+        #resultado.cero     { color: #555;    font-weight: bold; }
+    </style>
+</head>
+<body>
+
+    <h1>Parte A &mdash; Sumatoria y evaluación de signo</h1>
+    <p>Ingresá dos valores numéricos y presioná "Calcular".</p>
+
+    <div class="campo">
+        <label for="valor1">Primer valor</label>
+        <input type="number" id="valor1" step="any" placeholder="Ej: 10">
+    </div>
+
+    <div class="campo">
+        <label for="valor2">Segundo valor</label>
+        <input type="number" id="valor2" step="any" placeholder="Ej: -25">
+    </div>
+
+    <button type="button" id="btnCalcular">Calcular</button>
+
+    <div class="caja-resultado">
+        Resultado: <span id="resultado">--</span>
+    </div>
+
+    <script src="parteA-sumatoria.js" defer></script>
+
+</body>
+</html>

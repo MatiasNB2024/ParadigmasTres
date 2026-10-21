@@ -1,0 +1,4 @@
+# Los archivos de configuracion y SQL no deben poder abrirse desde el navegador
+<IfModule mod_authz_core.c>
+    Require all denied
+</IfModule>
