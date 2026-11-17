@@ -1,0 +1,741 @@
+/* ============================================================
+   estilos.css — Hoja de estilos única de la SPA
+   Evolución de la maqueta responsive de la AE1 (barra de navegación
+   oscura, franja de título celeste, tarjetas blancas y tablas verdes),
+   ahora con Flexbox/Grid y criterios de accesibilidad WCAG 2.1:
+     - Todos los pares de colores de texto cumplen contraste AA (4,5:1).
+     - Foco visible con :focus-visible en todos los elementos interactivos.
+     - La información nunca depende solo del color (los avisos llevan texto).
+   ============================================================ */
+
+:root {
+    --color-fondo: #f2f2f2;
+    --color-superficie: #ffffff;
+    --color-texto: #1a1a1a;
+    --color-texto-secundario: #595959;
+    --color-fondo-navbar: #333333;
+    --color-texto-claro: #f2f2f2;
+    --color-primario: #2E7D32;          /* blanco sobre este verde: 5,13:1 */
+    --color-primario-hover: #1B5E20;
+    --color-peligro: #C62828;           /* blanco sobre este rojo: 5,62:1 */
+    --color-peligro-hover: #8E0000;
+    --color-secundario: #545454;
+    --color-secundario-hover: #333333;
+    --color-detalle: #1565C0;
+    --color-detalle-hover: #0D47A1;
+    --color-titulo-fondo: #ADD8E6;
+    --color-borde: #cccccc;
+    --color-fila-critica: #FDECEA;
+    --color-foco: #0B57D0;
+    --color-foco-oscuro: #FFD60A;
+    --radio: 6px;
+    --sombra: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+* {
+    box-sizing: border-box;
+}
+
+html {
+    font-size: 100%;
+}
+
+body {
+    margin: 0;
+    font-family: Arial, Helvetica, sans-serif;
+    line-height: 1.5;
+    color: var(--color-texto);
+    background-color: var(--color-fondo);
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+img {
+    max-width: 100%;
+    height: auto;
+}
+
+a {
+    color: var(--color-detalle-hover);
+}
+
+/* ---------- Foco visible (WCAG 2.4.7) ---------- */
+:focus-visible {
+    outline: 3px solid var(--color-foco);
+    outline-offset: 2px;
+    box-shadow: 0 0 0 5px #ffffff;
+}
+
+/* En los campos de fecha Chrome enfoca las partes internas (día, mes, año) y
+   :focus-visible no se aplica al campo (tampoco :focus cuando el foco está en el
+   ícono del calendario): se marca con :focus y :focus-within para que siempre se vea. */
+input[type="date"]:focus,
+input[type="date"]:focus-within {
+    outline: 3px solid var(--color-foco);
+    outline-offset: 2px;
+    box-shadow: 0 0 0 5px #ffffff;
+}
+
+.encabezado :focus-visible {
+    outline-color: var(--color-foco-oscuro);
+    box-shadow: none;
+}
+
+/* El <main> y los títulos reciben foco por programa (al cambiar de vista), no con Tab. */
+main:focus,
+h1:focus,
+h2:focus {
+    outline: none;
+}
+
+main:focus-visible,
+h1:focus-visible,
+h2:focus-visible {
+    outline: 3px dashed var(--color-foco);
+    outline-offset: 4px;
+    box-shadow: none;
+}
+
+/* ---------- Saltar al contenido ---------- */
+.saltar {
+    position: absolute;
+    left: 8px;
+    top: -60px;
+    z-index: 100;
+    padding: 10px 16px;
+    background-color: var(--color-superficie);
+    color: var(--color-detalle-hover);
+    font-weight: bold;
+    border-radius: var(--radio);
+}
+
+.saltar:focus {
+    top: 8px;
+}
+
+.visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+[hidden] {
+    display: none !important;
+}
+
+/* ---------- Encabezado y barra de navegación (AE1, ahora con Flexbox) ---------- */
+.encabezado {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px 16px;
+    padding: 8px 16px;
+    background-color: var(--color-fondo-navbar);
+    color: var(--color-texto-claro);
+}
+
+.marca {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.marca img {
+    border-radius: 50%;
+    background-color: var(--color-superficie);
+}
+
+.marca-nombre {
+    font-size: 1.25rem;
+    font-weight: bold;
+}
+
+.navbar {
+    flex: 1;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+}
+
+.navbar-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.navbar-links a {
+    display: block;
+    padding: 12px 16px;
+    color: var(--color-texto-claro);
+    text-decoration: none;
+    border-radius: var(--radio);
+}
+
+.navbar-links a:hover {
+    background-color: #dddddd;
+    color: #000000;
+}
+
+.navbar-links a[aria-current="page"] {
+    background-color: var(--color-superficie);
+    color: #000000;
+    font-weight: bold;
+}
+
+.navbar-right {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+    margin-left: auto;
+}
+
+.usuario-actual {
+    margin: 0;
+}
+
+.badge-rol {
+    display: inline-block;
+    margin-left: 6px;
+    padding: 2px 8px;
+    border-radius: 10px;
+    background-color: #C8E6C9;
+    color: var(--color-texto);
+    font-size: 0.8rem;
+    font-weight: bold;
+    text-transform: uppercase;
+}
+
+/* ---------- Contenido ---------- */
+main {
+    flex: 1;
+}
+
+.page-title {
+    margin: 0;
+    padding: 10px 16px;
+    text-align: center;
+    font-size: 1.5rem;
+    background-color: var(--color-titulo-fondo);
+    color: #000000;
+}
+
+.page {
+    max-width: 1300px;
+    margin: 0 auto;
+    padding: 20px 16px;
+}
+
+.tarjeta {
+    background-color: var(--color-superficie);
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: var(--sombra);
+    margin-bottom: 24px;
+}
+
+.tarjeta h2,
+.page > section > h2 {
+    margin-top: 0;
+    font-size: 1.25rem;
+}
+
+.ayuda,
+.texto-secundario {
+    color: var(--color-texto-secundario);
+    font-size: 0.9rem;
+}
+
+.texto-secundario {
+    display: block;
+}
+
+.saludo {
+    font-size: 1.1rem;
+}
+
+/* ---------- Formularios (Grid, sin tablas de maquetación) ---------- */
+.form-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 16px;
+}
+
+.form-field {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin-bottom: 12px;
+}
+
+.form-field label {
+    font-weight: bold;
+}
+
+input[type="text"],
+input[type="email"],
+input[type="password"],
+input[type="number"],
+input[type="date"],
+input[type="search"],
+input[type="file"],
+select {
+    width: 100%;
+    min-height: 44px;
+    padding: 8px 10px;
+    font: inherit;
+    color: var(--color-texto);
+    background-color: var(--color-superficie);
+    border: 1px solid #767676;
+    border-radius: var(--radio);
+}
+
+fieldset {
+    margin: 0 0 16px;
+    padding: 12px 16px;
+    border: 1px solid var(--color-borde);
+    border-radius: var(--radio);
+}
+
+legend {
+    padding: 0 6px;
+    font-weight: bold;
+}
+
+.opciones-tipo {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 24px;
+}
+
+.btn-opcion {
+    min-height: 44px;
+    padding: 8px 16px;
+    font: inherit;
+    color: var(--color-texto);
+    background-color: var(--color-superficie);
+    border: 2px solid #767676;
+    border-radius: var(--radio);
+    cursor: pointer;
+}
+
+.btn-opcion:hover {
+    border-color: var(--color-primario);
+}
+
+/* El estado elegido se indica con borde, fondo y una marca de texto (no solo con color) */
+.btn-opcion[aria-pressed="true"] {
+    font-weight: bold;
+    color: #ffffff;
+    background-color: var(--color-primario);
+    border-color: var(--color-primario-hover);
+}
+
+.btn-opcion[aria-pressed="true"]::before {
+    content: "✓ ";
+}
+
+.filtros {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    gap: 12px 16px;
+}
+
+.filtros .form-field {
+    flex: 1 1 200px;
+    margin-bottom: 0;
+}
+
+.filtros-botones {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.barra-acciones {
+    margin-bottom: 16px;
+}
+
+.preview {
+    max-width: 120px;
+    margin-top: 8px;
+    border: 1px solid var(--color-borde);
+    border-radius: var(--radio);
+}
+
+/* ---------- Botones ---------- */
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 44px;
+    padding: 8px 16px;
+    font: inherit;
+    font-weight: bold;
+    color: #ffffff;
+    background-color: var(--color-primario);
+    border: 2px solid transparent;
+    border-radius: var(--radio);
+    cursor: pointer;
+}
+
+.btn:hover {
+    background-color: var(--color-primario-hover);
+}
+
+/* Enlaces con aspecto de botón (por ejemplo "Movimientos" en la tabla de stock) */
+a.btn {
+    text-decoration: none;
+}
+
+.btn:disabled {
+    opacity: 0.65;
+    cursor: wait;
+}
+
+.btn-peligro {
+    background-color: var(--color-peligro);
+}
+
+.btn-peligro:hover {
+    background-color: var(--color-peligro-hover);
+}
+
+.btn-secundario {
+    background-color: var(--color-secundario);
+}
+
+.btn-secundario:hover {
+    background-color: var(--color-secundario-hover);
+}
+
+.btn-detalle {
+    background-color: var(--color-detalle);
+}
+
+.btn-detalle:hover {
+    background-color: var(--color-detalle-hover);
+}
+
+.btn-enlace {
+    padding: 4px;
+    font: inherit;
+    font-weight: bold;
+    color: var(--color-detalle-hover);
+    text-decoration: underline;
+    background: none;
+    border: none;
+    cursor: pointer;
+}
+
+/* ---------- Mensajes (regiones aria-live) ---------- */
+.mensaje:empty,
+.estado:empty {
+    display: none;
+}
+
+.mensaje,
+.estado {
+    margin: 12px 0;
+    font-weight: bold;
+}
+
+.mensaje-error {
+    color: #B71C1C;
+}
+
+.mensaje-ok {
+    color: var(--color-primario-hover);
+}
+
+.mensaje-info {
+    color: var(--color-detalle-hover);
+}
+
+/* ---------- Tablas (solo para datos tabulares) ---------- */
+.tabla-scroll {
+    /* position: relative contiene a los textos .visually-hidden de la tabla:
+       sin esto se posicionan respecto de la página y la ensanchan en celulares. */
+    position: relative;
+    overflow-x: auto;
+    background-color: var(--color-superficie);
+    border-radius: 8px;
+    box-shadow: var(--sombra);
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+th,
+td {
+    padding: 10px 12px;
+    text-align: left;
+    vertical-align: top;
+    border-bottom: 1px solid var(--color-borde);
+}
+
+th {
+    background-color: var(--color-primario);
+    color: #ffffff;
+    white-space: nowrap;
+}
+
+tbody tr:hover {
+    background-color: #f7f7f7;
+}
+
+.celda-vacia {
+    text-align: center;
+    color: var(--color-texto-secundario);
+}
+
+.cantidad {
+    font-weight: bold;
+}
+
+.producto-nombre {
+    display: block;
+    font-weight: bold;
+}
+
+.producto-imagen {
+    width: 64px;
+    height: 64px;
+    object-fit: contain;
+}
+
+.ubicacion {
+    display: block;
+    margin-top: 4px;
+    font-size: 0.85rem;
+    color: #2e4a62;
+}
+
+.sin-ubicacion {
+    font-style: italic;
+    color: #6B6B6B;
+}
+
+.acciones {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    min-width: 200px;
+}
+
+.acciones .btn {
+    min-height: 36px;
+    padding: 6px 12px;
+    font-size: 0.9rem;
+}
+
+.confirmacion {
+    flex-basis: 100%;
+    font-weight: bold;
+    color: #B71C1C;
+}
+
+.fila-critica,
+.fila-critica:hover {
+    background-color: var(--color-fila-critica);
+}
+
+.fila-inactiva {
+    color: var(--color-texto-secundario);
+}
+
+.fila-detalle td {
+    background-color: #f1f8f1;
+    border-left: 4px solid var(--color-primario);
+}
+
+.ficha-tecnica {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 12px 20px;
+    margin: 0;
+}
+
+.ficha-tecnica dt,
+.datos-cuenta dt {
+    font-size: 0.8rem;
+    font-weight: bold;
+    text-transform: uppercase;
+    color: var(--color-texto-secundario);
+}
+
+.ficha-tecnica dd,
+.datos-cuenta dd {
+    margin: 2px 0 0;
+}
+
+.datos-cuenta {
+    display: grid;
+    gap: 16px;
+    margin: 0;
+}
+
+/* ---------- Etiquetas de estado (siempre con texto, no solo color) ---------- */
+.badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-size: 0.8rem;
+    font-weight: bold;
+    white-space: nowrap;
+}
+
+.badge-critico {
+    background-color: var(--color-peligro);
+    color: #ffffff;
+}
+
+.badge-alerta {
+    background-color: #FFF1D6;
+    color: #7A4100;
+}
+
+.badge-ok,
+.badge-entrada {
+    background-color: #E3F2E5;
+    color: var(--color-primario-hover);
+}
+
+.badge-salida {
+    background-color: var(--color-fila-critica);
+    color: #B71C1C;
+}
+
+.badge-transferencia {
+    background-color: #E3EEFB;
+    color: var(--color-detalle-hover);
+}
+
+/* ---------- Inicio: resumen ---------- */
+.resumen-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 16px;
+    margin: 0 0 24px;
+    padding: 0;
+    list-style: none;
+}
+
+.resumen-item {
+    display: flex;
+    flex-direction: column;
+    padding: 16px;
+    background-color: var(--color-superficie);
+    border-left: 6px solid var(--color-primario);
+    border-radius: 8px;
+    box-shadow: var(--sombra);
+}
+
+.resumen-valor {
+    font-size: 2rem;
+    font-weight: bold;
+}
+
+.resumen-titulo {
+    color: var(--color-texto-secundario);
+}
+
+/* ---------- Vista pública: bienvenida + login (AE1: index.html e iniciosesion.html) ---------- */
+.pagina-login {
+    display: grid;
+    grid-template-columns: 1fr minmax(280px, 420px);
+    gap: 32px;
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 32px 16px;
+    align-items: start;
+}
+
+.bienvenida h1 {
+    margin-top: 0;
+    font-size: 1.75rem;
+}
+
+.bienvenida p {
+    font-size: 1.1rem;
+    color: var(--color-texto-secundario);
+}
+
+.bienvenida-imagen {
+    border-radius: 8px;
+    box-shadow: var(--sombra);
+}
+
+.cambio-panel {
+    margin: 16px 0 0;
+}
+
+/* ---------- Pie ---------- */
+.footer {
+    padding: 16px;
+    text-align: center;
+    background-color: var(--color-fondo-navbar);
+    color: var(--color-texto-claro);
+}
+
+.footer p {
+    margin: 0;
+}
+
+/* ---------- Responsive ---------- */
+@media (max-width: 900px) {
+    .pagina-login {
+        grid-template-columns: 1fr;
+    }
+
+    .navbar-right {
+        margin-left: 0;
+    }
+}
+
+@media (max-width: 600px) {
+    .encabezado {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .navbar,
+    .navbar-links {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .navbar-right {
+        justify-content: space-between;
+    }
+
+    .page-title {
+        font-size: 1.25rem;
+    }
+
+    .tarjeta {
+        padding: 16px;
+    }
+}
+
+/* Respeta la preferencia del sistema de reducir animaciones */
+@media (prefers-reduced-motion: reduce) {
+    * {
+        transition: none !important;
+        animation: none !important;
+    }
+}

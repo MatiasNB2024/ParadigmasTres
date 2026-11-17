@@ -2,18 +2,20 @@
 declare(strict_types=1);
 
 /**
- * POST api/login.php
+ * POST api/login.php  —  CU "Iniciar sesión"
  * Recibe JSON: { "email": "...", "password": "..." }
  *
  * Respuestas:
  *   200 OK                   credenciales correctas (se inicia la sesión)
  *   400 Bad Request          faltan campos o JSON inválido
  *   401 Unauthorized         credenciales incorrectas
- *   405 / 500                método no permitido / error del servidor
+ *   403 Forbidden            el usuario fue deshabilitado por un administrador
+ *   405 / 415 / 500          método no permitido / no es JSON / error del servidor
  */
 
 require __DIR__ . '/../config/conexion.php';
 require __DIR__ . '/../config/helpers.php';
+require __DIR__ . '/../models/UsuarioModel.php';
 
 exigir_metodo('POST');
 $datos = leer_json_entrada();
@@ -26,13 +28,8 @@ if ($email === '' || $password === '') {
 }
 
 try {
-    $pdo = obtener_conexion();
-
-    $consulta = $pdo->prepare(
-        'SELECT id, nombre, email, password, rol FROM usuarios WHERE email = :email LIMIT 1'
-    );
-    $consulta->execute([':email' => $email]);
-    $usuario = $consulta->fetch();
+    // UsuarioModel usa un PDO Prepared Statement con el marcador :email.
+    $usuario = (new UsuarioModel(obtener_conexion()))->buscarPorEmailConPassword($email);
 } catch (PDOException $e) {
     error_log('login.php: ' . $e->getMessage());
     responder_error(500, 'Error interno del servidor.');
@@ -52,6 +49,12 @@ if ($usuario) {
 if (!$usuario || !$claveCorrecta) {
     // Mensaje genérico: no revela si falló el correo o la contraseña.
     responder_error(401, 'Credenciales incorrectas.');
+}
+
+// CU "Gestionar usuarios": un usuario deshabilitado no puede entrar.
+// (Se informa recién después de verificar la contraseña, para no revelar nada a quien no la sabe.)
+if (!(bool) $usuario['activo']) {
+    responder_error(403, 'Tu usuario está deshabilitado. Consultá con un administrador.');
 }
 
 // ---- Credenciales válidas: se abre la sesión ----

@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Sistema de gestión de stock de Benitez Despensas: productos, movimientos y sucursales.">
+    <title>Benitez Despensas - Gestión de Stock</title>
+    <link rel="icon" href="imgstock/logostock.png">
+    <link rel="stylesheet" href="css/estilos.css">
+    <!-- Único script de la aplicación (módulo ES). No hay JavaScript ni PHP embebido en este HTML. -->
+    <script type="module" src="js/app.js"></script>
+</head>
+<body>
+    <!-- Primer elemento enfocable: permite saltar la navegación con el teclado (WCAG 2.4.1) -->
+    <a class="saltar" href="#contenido">Saltar al contenido principal</a>
+
+    <header class="encabezado">
+        <div class="marca">
+            <img src="imgstock/logostock.png" alt="" width="48" height="48">
+            <span class="marca-nombre">Benitez Despensas</span>
+        </div>
+
+        <!-- Navegación principal: se muestra solo con sesión iniciada -->
+        <nav class="navbar" id="navegacion" aria-label="Principal" hidden>
+            <ul class="navbar-links">
+                <li><a href="#/inicio">Inicio</a></li>
+                <li><a href="#/stock">Stock de productos</a></li>
+                <li><a href="#/movimientos">Movimientos</a></li>
+                <li data-solo-admin hidden><a href="#/usuarios">Usuarios</a></li>
+                <li><a href="#/perfil">Mi perfil</a></li>
+            </ul>
+            <div class="navbar-right">
+                <p class="usuario-actual">
+                    <span id="usuario-nombre"></span>
+                    <span id="usuario-rol" class="badge-rol"></span>
+                </p>
+                <button type="button" id="btn-cerrar-sesion" class="btn btn-peligro">Cerrar sesión</button>
+            </div>
+        </nav>
+    </header>
+
+    <main id="contenido" tabindex="-1">
+        <!-- Avisos generales (sesión cerrada, cambios de vista): los anuncian los lectores de pantalla -->
+        <p id="anuncios" class="visually-hidden" aria-live="polite"></p>
+        <!-- Aquí app.js inserta la vista actual a partir de las plantillas de abajo -->
+        <div id="vista"></div>
+    </main>
+
+    <footer class="footer">
+        <p>&copy; 2026 Benitez Despensas. Sistema de gestión de stock.</p>
+    </footer>
+
+    <!-- =====================================================================
+         PLANTILLAS DE LAS VISTAS (evolución de las páginas de la AE1).
+         El contenido de <template> no se muestra: app.js lo clona y completa
+         los datos con .textContent.
+         ===================================================================== -->
+
+    <!-- Vista pública: bienvenida + iniciar sesión / registrarse (antes index.html e iniciosesion.html) -->
+    <template id="tpl-login">
+        <div class="pagina-login">
+            <section class="bienvenida">
+                <h1 tabindex="-1">Bienvenido al Sistema de Stock de Benitez Despensas</h1>
+                <p>Gestioná tus productos, verificá existencias en las dos sucursales y registrá cada movimiento de mercadería.</p>
+                <img src="imgstock/stockimage.jpeg" alt="Estanterías de un depósito con cajas de mercadería" class="bienvenida-imagen" width="400" height="267">
+            </section>
+
+            <section class="tarjeta" id="panel-login" aria-labelledby="titulo-login">
+                <h2 id="titulo-login">Iniciar sesión</h2>
+                <form id="form-login" novalidate>
+                    <div class="form-field">
+                        <label for="login-email">Correo electrónico</label>
+                        <input type="email" id="login-email" name="email" autocomplete="username" required>
+                    </div>
+                    <div class="form-field">
+                        <label for="login-password">Contraseña</label>
+                        <input type="password" id="login-password" name="password" autocomplete="current-password" required>
+                    </div>
+                    <p class="mensaje" id="login-mensaje" aria-live="polite"></p>
+                    <button type="submit" class="btn">Ingresar</button>
+                </form>
+                <p class="cambio-panel">¿No tenés cuenta?
+                    <button type="button" class="btn-enlace" data-accion="mostrar-registro">Registrar nuevo usuario</button>
+                </p>
+            </section>
+
+            <section class="tarjeta" id="panel-registro" aria-labelledby="titulo-registro" hidden>
+                <h2 id="titulo-registro" tabindex="-1">Registro de usuario</h2>
+                <p class="ayuda">Las cuentas nuevas se crean con rol <strong>empleado</strong>. Un administrador puede cambiarlo.</p>
+                <form id="form-registro" novalidate>
+                    <div class="form-field">
+                        <label for="registro-nombre">Nombre</label>
+                        <input type="text" id="registro-nombre" name="nombre" autocomplete="name" minlength="2" maxlength="100" required>
+                    </div>
+                    <div class="form-field">
+                        <label for="registro-email">Correo electrónico</label>
+                        <input type="email" id="registro-email" name="email" autocomplete="email" maxlength="150" required>
+                    </div>
+                    <div class="form-field">
+                        <label for="registro-password">Contraseña (mínimo 8 caracteres)</label>
+                        <input type="password" id="registro-password" name="password" autocomplete="new-password" minlength="8" maxlength="72" required>
+                    </div>
+                    <div class="form-field">
+                        <label for="registro-confirmar">Confirmar contraseña</label>
+                        <input type="password" id="registro-confirmar" name="confirmar" autocomplete="new-password" required>
+                    </div>
+                    <p class="mensaje" id="registro-mensaje" aria-live="polite"></p>
+                    <button type="submit" class="btn">Registrarme</button>
+                </form>
+                <p class="cambio-panel">¿Ya tenés cuenta?
+                    <button type="button" class="btn-enlace" data-accion="mostrar-login">Volver a iniciar sesión</button>
+                </p>
+            </section>
+        </div>
+    </template>
+
+    <!-- Inicio: resumen y alertas (CU05 Controlar vencimientos · Controlar bajo stock) -->
+    <template id="tpl-inicio">
+        <h1 class="page-title" tabindex="-1">Inicio</h1>
+        <div class="page">
+            <p class="saludo" id="inicio-saludo"></p>
+
+            <section aria-labelledby="titulo-resumen">
+                <h2 id="titulo-resumen">Resumen del inventario</h2>
+                <ul class="resumen-grid" id="inicio-resumen" aria-live="polite">
+                    <li class="resumen-item">Cargando…</li>
+                </ul>
+            </section>
+
+            <section class="tarjeta" aria-labelledby="titulo-bajo-stock">
+                <h2 id="titulo-bajo-stock">Productos con bajo stock</h2>
+                <p class="ayuda">Productos con menos unidades que su stock mínimo, en cada sucursal.</p>
+                <p class="estado" id="bajo-stock-estado" aria-live="polite"></p>
+                <div class="tabla-scroll" role="region" aria-labelledby="titulo-bajo-stock" tabindex="0">
+                    <table>
+                        <caption class="visually-hidden">Productos por debajo del stock mínimo</caption>
+                        <thead>
+                            <tr>
+                                <th scope="col">Producto</th>
+                                <th scope="col">Sucursal</th>
+                                <th scope="col">Cantidad</th>
+                                <th scope="col">Stock mínimo</th>
+                                <th scope="col">Ubicación</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabla-bajo-stock"></tbody>
+                    </table>
+                </div>
+            </section>
+
+            <section class="tarjeta" aria-labelledby="titulo-vencimientos">
+                <h2 id="titulo-vencimientos">Control de vencimientos</h2>
+                <form id="form-vencimientos" class="filtros">
+                    <div class="form-field">
+                        <label for="vencimientos-dias">Mostrar productos que vencen en los próximos</label>
+                        <select id="vencimientos-dias" name="dias">
+                            <option value="30">30 días</option>
+                            <option value="60">60 días</option>
+                            <option value="90">90 días</option>
+                            <option value="180">180 días</option>
+                            <option value="365">365 días</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn">Consultar</button>
+                </form>
+                <p class="estado" id="vencimientos-estado" aria-live="polite"></p>
+                <div class="tabla-scroll" role="region" aria-labelledby="titulo-vencimientos" tabindex="0">
+                    <table>
+                        <caption class="visually-hidden">Productos vencidos y próximos a vencer</caption>
+                        <thead>
+                            <tr>
+                                <th scope="col">Producto</th>
+                                <th scope="col">Lote</th>
+                                <th scope="col">Vencimiento</th>
+                                <th scope="col">Estado</th>
+                                <th scope="col">Stock total</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabla-vencimientos"></tbody>
+                    </table>
+                </div>
+            </section>
+        </div>
+    </template>
+
+    <!-- Stock: CU04 Consultar stock · Consultar producto · CU01 Registrar · Modificar · Eliminar -->
+    <template id="tpl-stock">
+        <h1 class="page-title" tabindex="-1">Stock de productos</h1>
+        <div class="page">
+            <form id="form-busqueda" class="tarjeta filtros" role="search" aria-label="Buscar productos">
+                <div class="form-field">
+                    <label for="busqueda-texto">Buscar por nombre, código o categoría</label>
+                    <input type="search" id="busqueda-texto" name="buscar" maxlength="100">
+                </div>
+                <div class="form-field">
+                    <label for="busqueda-categoria">Categoría</label>
+                    <select id="busqueda-categoria" name="categoria_id">
+                        <option value="">Todas</option>
+                    </select>
+                </div>
+                <div class="filtros-botones">
+                    <button type="submit" class="btn">Buscar</button>
+                    <button type="reset" class="btn btn-secundario">Limpiar</button>
+                </div>
+            </form>
+
+            <div class="barra-acciones" data-solo-admin hidden>
+                <button type="button" class="btn" id="btn-nuevo-producto" aria-controls="seccion-producto" aria-expanded="false">Registrar nuevo producto</button>
+            </div>
+
+            <!-- Formulario de alta y modificación (solo administrador) -->
+            <section class="tarjeta" id="seccion-producto" aria-labelledby="titulo-form-producto" hidden>
+                <h2 id="titulo-form-producto" tabindex="-1">Registrar producto</h2>
+                <form id="form-producto" novalidate>
+                    <p class="ayuda">Los campos marcados con * son obligatorios.</p>
+                    <div class="form-grid">
+                        <div class="form-field">
+                            <label for="producto-codigo">Código *</label>
+                            <input type="text" id="producto-codigo" name="codigo" maxlength="30" required aria-describedby="ayuda-codigo">
+                            <small id="ayuda-codigo" class="ayuda">Letras, números y guiones. Ej.: HAR-000-001</small>
+                        </div>
+                        <div class="form-field">
+                            <label for="producto-nombre">Nombre *</label>
+                            <input type="text" id="producto-nombre" name="nombre" maxlength="120" required>
+                        </div>
+                        <div class="form-field">
+                            <label for="producto-categoria">Categoría *</label>
+                            <select id="producto-categoria" name="categoria_id" required></select>
+                        </div>
+                        <div class="form-field">
+                            <label for="producto-presentacion">Peso o cantidad</label>
+                            <input type="text" id="producto-presentacion" name="presentacion" maxlength="50" placeholder="Ej.: 1 kg">
+                        </div>
+                        <div class="form-field">
+                            <label for="producto-caracteristica">Color o característica del paquete</label>
+                            <input type="text" id="producto-caracteristica" name="caracteristica" maxlength="100">
+                        </div>
+                        <div class="form-field">
+                            <label for="producto-precio">Precio de compra por unidad ($) *</label>
+                            <input type="number" id="producto-precio" name="precio" min="0" step="0.01" required>
+                        </div>
+                        <div class="form-field">
+                            <label for="producto-proveedor">Proveedor</label>
+                            <input type="text" id="producto-proveedor" name="proveedor" maxlength="120">
+                        </div>
+                        <div class="form-field">
+                            <label for="producto-vencimiento">Vencimiento</label>
+                            <input type="date" id="producto-vencimiento" name="vencimiento">
+                        </div>
+                        <div class="form-field">
+                            <label for="producto-lote">Lote</label>
+                            <input type="text" id="producto-lote" name="lote" maxlength="40">
+                        </div>
+                        <div class="form-field">
+                            <label for="producto-medidas">Medidas</label>
+                            <input type="text" id="producto-medidas" name="medidas" maxlength="60">
+                        </div>
+                        <div class="form-field">
+                            <label for="producto-almacenamiento">Almacenamiento</label>
+                            <input type="text" id="producto-almacenamiento" name="almacenamiento" maxlength="120">
+                        </div>
+                        <div class="form-field">
+                            <label for="producto-stock-minimo">Stock mínimo por sucursal *</label>
+                            <input type="number" id="producto-stock-minimo" name="stock_minimo" min="0" step="1" value="10" required>
+                        </div>
+                        <div class="form-field">
+                            <label for="producto-imagen">Imagen (PNG, JPG o WEBP, hasta 2 MB)</label>
+                            <input type="file" id="producto-imagen" name="imagen" accept="image/png,image/jpeg,image/webp">
+                            <img id="producto-imagen-vista" class="preview" alt="Vista previa de la imagen del producto" hidden>
+                        </div>
+                    </div>
+                    <fieldset class="ubicaciones">
+                        <legend>Ubicación en cada sucursal</legend>
+                        <div class="form-grid" id="producto-ubicaciones"></div>
+                    </fieldset>
+                    <p class="mensaje" id="producto-mensaje" aria-live="polite"></p>
+                    <div class="filtros-botones">
+                        <button type="submit" class="btn" id="btn-guardar-producto">Guardar producto</button>
+                        <button type="button" class="btn btn-secundario" data-accion="cancelar-producto">Cancelar</button>
+                    </div>
+                </form>
+            </section>
+
+            <section class="tabla-section" aria-labelledby="titulo-tabla-stock">
+                <h2 id="titulo-tabla-stock" class="visually-hidden">Listado de productos</h2>
+                <p class="estado" id="stock-estado" aria-live="polite"></p>
+                <div class="tabla-scroll" role="region" aria-labelledby="titulo-tabla-stock" tabindex="0">
+                    <table id="tabla-stock">
+                        <caption class="visually-hidden">Productos con su cantidad y ubicación en cada sucursal</caption>
+                        <thead>
+                            <tr id="stock-encabezados">
+                                <th scope="col">Imagen</th>
+                                <th scope="col">Código</th>
+                                <th scope="col">Producto</th>
+                                <th scope="col">Categoría</th>
+                                <th scope="col">Total</th>
+                                <th scope="col">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabla-stock-cuerpo"></tbody>
+                    </table>
+                </div>
+            </section>
+        </div>
+    </template>
+
+    <!-- Movimientos: CU02 Entrada · CU03 Salida · Transferir stock · Consultar movimientos
+         (antes "Productos recibidos" y "Productos a entregar") -->
+    <template id="tpl-movimientos">
+        <h1 class="page-title" tabindex="-1">Movimientos de mercadería</h1>
+        <div class="page">
+            <section class="tarjeta" aria-labelledby="titulo-registrar-mov">
+                <h2 id="titulo-registrar-mov">Registrar movimiento</h2>
+                <form id="form-movimiento" novalidate>
+                    <!-- Botones de alternancia (aria-pressed): se eligen con Tab + Enter, sin flechas -->
+                    <fieldset class="opciones-tipo">
+                        <legend>Tipo de movimiento</legend>
+                        <input type="hidden" name="tipo" id="mov-tipo" value="entrada">
+                        <button type="button" class="btn-opcion" data-tipo="entrada" aria-pressed="true">Entrada (mercadería recibida)</button>
+                        <button type="button" class="btn-opcion" data-tipo="salida" aria-pressed="false">Salida (venta o entrega)</button>
+                        <button type="button" class="btn-opcion" data-tipo="transferencia" aria-pressed="false">Transferencia entre sucursales</button>
+                    </fieldset>
+                    <div class="form-grid">
+                        <div class="form-field">
+                            <label for="mov-producto">Producto *</label>
+                            <select id="mov-producto" name="producto_id" required></select>
+                        </div>
+                        <div class="form-field" data-campo-mov="sucursal">
+                            <label for="mov-sucursal">Sucursal *</label>
+                            <select id="mov-sucursal" name="sucursal_id"></select>
+                        </div>
+                        <div class="form-field" data-campo-mov="origen" hidden>
+                            <label for="mov-origen">Sucursal de origen *</label>
+                            <select id="mov-origen" name="sucursal_origen_id"></select>
+                        </div>
+                        <div class="form-field" data-campo-mov="destino" hidden>
+                            <label for="mov-destino">Sucursal de destino *</label>
+                            <select id="mov-destino" name="sucursal_destino_id"></select>
+                        </div>
+                        <div class="form-field">
+                            <label for="mov-cantidad">Cantidad *</label>
+                            <input type="number" id="mov-cantidad" name="cantidad" min="1" step="1" required>
+                        </div>
+                        <div class="form-field">
+                            <label for="mov-observacion" id="mov-observacion-etiqueta">Proveedor o remito</label>
+                            <input type="text" id="mov-observacion" name="observacion" maxlength="200">
+                        </div>
+                    </div>
+                    <p class="estado" id="mov-disponible" aria-live="polite"></p>
+                    <p class="mensaje" id="mov-mensaje" aria-live="polite"></p>
+                    <button type="submit" class="btn">Registrar movimiento</button>
+                </form>
+            </section>
+
+            <section class="tarjeta" aria-labelledby="titulo-historial">
+                <h2 id="titulo-historial">Historial de movimientos</h2>
+                <form id="form-historial" class="filtros" aria-label="Filtrar historial">
+                    <div class="form-field">
+                        <label for="hist-tipo">Tipo</label>
+                        <select id="hist-tipo" name="tipo">
+                            <option value="">Todos</option>
+                            <option value="entrada">Entradas</option>
+                            <option value="salida">Salidas</option>
+                            <option value="transferencia">Transferencias</option>
+                        </select>
+                    </div>
+                    <div class="form-field">
+                        <label for="hist-sucursal">Sucursal</label>
+                        <select id="hist-sucursal" name="sucursal_id">
+                            <option value="">Todas</option>
+                        </select>
+                    </div>
+                    <div class="form-field">
+                        <label for="hist-producto">Producto</label>
+                        <select id="hist-producto" name="producto_id">
+                            <option value="">Todos</option>
+                        </select>
+                    </div>
+                    <div class="form-field">
+                        <label for="hist-desde">Desde</label>
+                        <input type="date" id="hist-desde" name="desde">
+                    </div>
+                    <div class="form-field">
+                        <label for="hist-hasta">Hasta</label>
+                        <input type="date" id="hist-hasta" name="hasta">
+                    </div>
+                    <div class="filtros-botones">
+                        <button type="submit" class="btn">Filtrar</button>
+                        <button type="reset" class="btn btn-secundario">Limpiar</button>
+                    </div>
+                </form>
+                <p class="estado" id="historial-estado" aria-live="polite"></p>
+                <div class="tabla-scroll" role="region" aria-labelledby="titulo-historial" tabindex="0">
+                    <table>
+                        <caption class="visually-hidden">Entradas, salidas y transferencias, de la más reciente a la más antigua</caption>
+                        <thead>
+                            <tr>
+                                <th scope="col">Fecha</th>
+                                <th scope="col">Tipo</th>
+                                <th scope="col">Producto</th>
+                                <th scope="col">Cantidad</th>
+                                <th scope="col">Origen</th>
+                                <th scope="col">Destino</th>
+                                <th scope="col">Observación</th>
+                                <th scope="col">Registrado por</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabla-historial"></tbody>
+                    </table>
+                </div>
+            </section>
+        </div>
+    </template>
+
+    <!-- Usuarios: CU "Gestionar usuarios" (solo administrador) -->
+    <template id="tpl-usuarios">
+        <h1 class="page-title" tabindex="-1">Gestión de usuarios</h1>
+        <div class="page">
+            <section class="tarjeta" aria-labelledby="titulo-lista-usuarios">
+                <h2 id="titulo-lista-usuarios">Usuarios del sistema</h2>
+                <p class="estado" id="usuarios-estado" aria-live="polite"></p>
+                <div class="tabla-scroll" role="region" aria-labelledby="titulo-lista-usuarios" tabindex="0">
+                    <table>
+                        <caption class="visually-hidden">Usuarios, su rol y su estado</caption>
+                        <thead>
+                            <tr>
+                                <th scope="col">Nombre</th>
+                                <th scope="col">Correo</th>
+                                <th scope="col">Rol</th>
+                                <th scope="col">Estado</th>
+                                <th scope="col">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabla-usuarios"></tbody>
+                    </table>
+                </div>
+            </section>
+
+            <section class="tarjeta" aria-labelledby="titulo-nuevo-usuario">
+                <h2 id="titulo-nuevo-usuario">Crear usuario</h2>
+                <form id="form-usuario" novalidate>
+                    <div class="form-grid">
+                        <div class="form-field">
+                            <label for="usuario-nombre-nuevo">Nombre *</label>
+                            <input type="text" id="usuario-nombre-nuevo" name="nombre" autocomplete="off" maxlength="100" required>
+                        </div>
+                        <div class="form-field">
+                            <label for="usuario-email-nuevo">Correo electrónico *</label>
+                            <input type="email" id="usuario-email-nuevo" name="email" autocomplete="off" maxlength="150" required>
+                        </div>
+                        <div class="form-field">
+                            <label for="usuario-password-nuevo">Contraseña inicial (mínimo 8) *</label>
+                            <input type="password" id="usuario-password-nuevo" name="password" autocomplete="new-password" minlength="8" maxlength="72" required>
+                        </div>
+                        <div class="form-field">
+                            <label for="usuario-rol-nuevo">Rol *</label>
+                            <select id="usuario-rol-nuevo" name="rol">
+                                <option value="empleado">Empleado</option>
+                                <option value="administrador">Administrador</option>
+                            </select>
+                        </div>
+                    </div>
+                    <p class="mensaje" id="usuario-mensaje" aria-live="polite"></p>
+                    <button type="submit" class="btn">Crear usuario</button>
+                </form>
+            </section>
+        </div>
+    </template>
+
+    <!-- Perfil: datos de la cuenta (api/perfil.php) -->
+    <template id="tpl-perfil">
+        <h1 class="page-title" tabindex="-1">Mi perfil</h1>
+        <div class="page">
+            <section class="tarjeta" aria-labelledby="titulo-cuenta">
+                <h2 id="titulo-cuenta">Datos de la cuenta</h2>
+                <dl class="datos-cuenta" id="perfil-datos" aria-live="polite"></dl>
+            </section>
+        </div>
+    </template>
+
+    <!-- Vista para rutas inexistentes o sin permiso -->
+    <template id="tpl-error">
+        <h1 class="page-title" tabindex="-1">Página no disponible</h1>
+        <div class="page">
+            <p class="tarjeta" id="error-detalle"></p>
+            <p><a href="#/inicio">Volver al inicio</a></p>
+        </div>
+    </template>
+</body>
+</html>
